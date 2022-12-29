@@ -1,13 +1,15 @@
 use axum::{response::Html, routing::{get, post}, Router, Json, http::StatusCode, response::IntoResponse};
 use std::net::SocketAddr;
 use serde::{Deserialize, Serialize};
-
+use seaport_server::*;
+use diesel::query_dsl::RunQueryDsl;
 #[tokio::main]
 async fn main() {
     // build our application with a route
     let app = Router::new()
         .route("/", get(root))
-        .route("/users", post(create_user));
+        .route("/orders", get(get_orders));
+        // .route("/orders", post(create_orders));
 
     // run it
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -23,32 +25,28 @@ async fn root() -> Html<&'static str> {
 }
 
 
-async fn create_user(
-    // this argument tells axum to parse the request body
-    // as JSON into a `CreateUser` type
-    Json(payload): Json<CreateUser>,
+async fn get_orders(
+    Json(payload): Json<GetOrder>,
 ) -> impl IntoResponse {
-    // insert your application logic here
-    let user = User {
-        id: 1337,
-        username: payload.username,
-    };
+    use crate::schema::orders::dsl;
 
-    // this will be converted into a JSON response
-    // with a status code of `201 Created`
-    (StatusCode::CREATED, Json(user))
+    let connection = &mut establish_connection();
+    let results = dsl::orders.load::<Order>(connection)
+        .expect("Error loading order");
+    // let results = orders
+    //     .load::<Order>(connection)
+    //     .expect("Error loading orders");
+    (StatusCode::CREATED, Json({}))
 }
 
 
-// the input to our `create_user` handler
 #[derive(Deserialize)]
-struct CreateUser {
-    username: String,
+struct GetOrder {
+    address: String,
 }
 
-// the output to our `create_user` handler
-#[derive(Serialize)]
-struct User {
-    id: u64,
-    username: String,
+    #[derive(Serialize)]
+struct Order {
+    create_by: String,
+    signature: String,
 }
