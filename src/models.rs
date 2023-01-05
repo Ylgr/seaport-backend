@@ -1,6 +1,7 @@
 use diesel::prelude::*;
-// use uuid::Uuid;
+use serde::{Deserialize, Serialize};
 use crate::schema::*;
+use uuid::Uuid;
 
 #[derive(Debug, diesel_derive_enum::DbEnum, Clone)]
 #[DieselTypePath = "crate::schema::sql_types::TokenType"]
@@ -10,16 +11,17 @@ pub enum TokenType {
     ERC1155
 }
 
-#[derive(Insertable)]
+#[derive(Queryable, Serialize)]
 #[diesel(table_name = orders)]
-pub struct NewOrder<'a> {
-    pub signature: &'a str,
-    pub create_by: &'a str,
+pub struct Order {
+    pub id: Uuid,
+    pub signature: String,
+    pub create_by: String,
 }
 
 #[derive(Insertable)]
 #[diesel(table_name = considerations)]
-pub struct NewConsideration<'a> {
+pub struct Consideration<'a> {
     // pub order_id: Uuid,
     pub recipient: &'a str,
     pub type_: TokenType,
