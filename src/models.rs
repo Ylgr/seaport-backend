@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::schema::*;
 use uuid::Uuid;
 
-#[derive(Debug, diesel_derive_enum::DbEnum, Clone)]
+#[derive(Debug, diesel_derive_enum::DbEnum, Clone, Deserialize)]
 #[DieselTypePath = "crate::schema::sql_types::TokenType"]
 pub enum TokenType {
     ERC20,
@@ -26,25 +26,29 @@ pub struct NewOrder {
     pub create_by: String,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Deserialize)]
 #[diesel(table_name = considerations)]
-pub struct Consideration<'a> {
-    // pub order_id: Uuid,
-    pub recipient: &'a str,
+pub struct NewConsideration {
+    pub recipient: String,
     pub type_: TokenType,
-    pub token_address: &'a str,
-    pub amount: &'a str,
-    pub end_amount: &'a str,
-    pub identifier: &'a str,
+    pub token_address: String,
+    pub amount: String,
+    pub end_amount: String,
+    pub identifier: String,
 }
 
 #[derive(Insertable)]
 #[diesel(table_name = offers)]
-pub struct NewOffer<'a> {
-    // pub order_id: Uuid,
+pub struct NewOffer {
     pub type_: TokenType,
-    pub token_address: &'a str,
-    pub amount: &'a str,
-    pub end_amount: &'a str,
-    pub identifier: &'a str,
+    pub token_address: String,
+    pub amount: String,
+    pub end_amount: String,
+    pub identifier: String,
+}
+
+#[derive(Deserialize)]
+pub struct FullOrder {
+    pub order: NewOrder,
+    pub considerations: Vec<NewConsideration>,
 }

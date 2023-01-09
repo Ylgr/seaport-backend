@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use self::models::*;
 use diesel::prelude::*;
 use seaport_server::*;
+use std::borrow::Borrow;
+
 #[tokio::main]
 async fn main() {
     // build our application with a route
@@ -61,16 +63,22 @@ async fn get_orders(
 }
 
 async fn create_orders (
-    Json(payload): Json<NewOrder>,
+    Json(payload): Json<FullOrder>,
 ) -> impl IntoResponse {
     use self::schema::orders;
+    use self::schema::considerations;
     let connection = &mut establish_connection();
-    let results: Order = diesel::insert_into(orders::table)
-        .values(&payload)
+
+    let order: Order = diesel::insert_into(orders::table)
+        .values(&payload.order)
         .get_result(connection)
         .expect("Error saving order");
 
-    (StatusCode::CREATED, Json(results))
+    let consideration = diesel::insert_into(considerations::table)
+        .values(&payload.considerations)
+        .except("Error saving considerations");
+
+    (StatusCode::CREATED, Json(order))
 }
 
 #[derive(Deserialize)]
