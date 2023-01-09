@@ -45,12 +45,14 @@ async fn root() -> Html<&'static str> {
 
 
 async fn get_orders(
-    // Json(payload): Json<GetOrder>,
+    Json(payload): Json<GetOrder>,
 ) -> impl IntoResponse {
     use self::schema::orders::dsl::*;
 
     let connection = &mut establish_connection();
-    let results = orders.load::<Order>(connection)
+    let results = orders
+        .filter(create_by.eq(payload.address))
+        .load::<Order>(connection)
         .expect("Error loading order");
     // let results = orders
     //     .load::<Order>(connection)
