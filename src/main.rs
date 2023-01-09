@@ -9,8 +9,8 @@ async fn main() {
     // build our application with a route
     let app = Router::new()
         .route("/", get(root))
-        .route("/orders", get(get_orders));
-        // .route("/orders", post(create_orders));
+        .route("/orders", get(get_orders))
+        .route("/orders", post(create_orders));
 
     // run it
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -57,8 +57,22 @@ async fn get_orders(
     // let results = orders
     //     .load::<Order>(connection)
     //     .expect("Error loading orders");
+    (StatusCode::OK, Json(results))
+}
+
+async fn create_orders (
+    Json(payload): Json<NewOrder>,
+) -> impl IntoResponse {
+    use self::schema::orders;
+    let connection = &mut establish_connection();
+    let results: Order = diesel::insert_into(orders::table)
+        .values(&payload)
+        .get_result(connection)
+        .expect("Error saving order");
+
     (StatusCode::CREATED, Json(results))
 }
+
 #[derive(Deserialize)]
 struct GetOrder {
     address: String,

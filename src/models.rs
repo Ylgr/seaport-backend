@@ -19,6 +19,13 @@ pub struct Order {
     pub create_by: String,
 }
 
+#[derive(Insertable, Deserialize)]
+#[diesel(table_name = orders)]
+pub struct NewOrder {
+    pub signature: String,
+    pub create_by: String,
+}
+
 #[derive(Insertable)]
 #[diesel(table_name = considerations)]
 pub struct Consideration<'a> {
