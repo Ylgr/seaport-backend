@@ -598,6 +598,7 @@ dependencies = [
  "axum",
  "diesel",
  "diesel-derive-enum",
+ "diesel_derives",
  "diesel_migrations",
  "dotenvy",
  "hyper",

@@ -14,8 +14,7 @@ diesel::table! {
         id -> Uuid,
         order_id -> Uuid,
         recipient -> Varchar,
-        #[sql_name = "type"]
-        type_ -> TokenType,
+        token_type -> TokenType,
         token_address -> Nullable<Varchar>,
         amount -> Nullable<Varchar>,
         end_amount -> Nullable<Varchar>,
@@ -30,8 +29,7 @@ diesel::table! {
     offers (id) {
         id -> Uuid,
         order_id -> Uuid,
-        #[sql_name = "type"]
-        type_ -> TokenType,
+        token_type -> TokenType,
         token_address -> Nullable<Varchar>,
         amount -> Nullable<Varchar>,
         end_amount -> Nullable<Varchar>,

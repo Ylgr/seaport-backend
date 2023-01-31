@@ -1,2 +1,2 @@
 DROP TABLE considerations;
-drop type token_type;
+drop type TOKEN_TYPE;

@@ -12,7 +12,8 @@ async fn main() {
     let app = Router::new()
         .route("/", get(root))
         .route("/orders", get(get_orders))
-        .route("/orders", post(create_orders));
+        .route("/order", post(create_order))
+        .route("/consideration", post(create_consideration));
 
     // run it
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -62,23 +63,45 @@ async fn get_orders(
     (StatusCode::OK, Json(results))
 }
 
-async fn create_orders (
-    Json(payload): Json<FullOrder>,
+// api create order
+async fn create_order(
+    Json(payload): Json<NewOrder>,
 ) -> impl IntoResponse {
-    use self::schema::orders;
-    use self::schema::considerations;
+    use self::schema::orders::dsl::*;
+
     let connection = &mut establish_connection();
+    let new_order = NewOrder {
+        signature: payload.signature,
+        create_by: payload.create_by,
+    };
+    let result = diesel::insert_into(orders)
+        .values(&new_order)
+        .get_result::<Order>(connection)
+        .expect("Error saving new order");
+    (StatusCode::OK, Json(result))
+}
 
-    let order: Order = diesel::insert_into(orders::table)
-        .values(&payload.order)
-        .get_result(connection)
-        .expect("Error saving order");
+// api create consideration
+async fn create_consideration(
+    Json(payload): Json<NewConsideration>,
+) -> impl IntoResponse {
+    use self::schema::considerations::dsl::*;
 
-    let consideration = diesel::insert_into(considerations::table)
-        .values(&payload.considerations)
-        .except("Error saving considerations");
-
-    (StatusCode::CREATED, Json(order))
+    let connection = &mut establish_connection();
+    let new_consideration = NewConsideration {
+        order_id: payload.order_id,
+        recipient: payload.recipient,
+        token_type: payload.token_type,
+        token_address: payload.token_address,
+        amount: payload.amount,
+        end_amount: payload.end_amount,
+        identifier: payload.identifier,
+    };
+    let result = diesel::insert_into(considerations)
+        .values(&new_consideration)
+        .get_result::<Consideration>(connection)
+        .expect("Error saving new consideration");
+    (StatusCode::OK, Json(result))
 }
 
 #[derive(Deserialize)]
