@@ -104,6 +104,68 @@ async fn create_consideration(
     (StatusCode::OK, Json(result))
 }
 
+// apt create full order return a full order include its considerations and offers
+async fn create_full_order(
+    Json(payload): Json<NewFullOrder>,
+) -> impl IntoResponse {
+    use self::schema::orders::dsl::*;
+    use self::schema::considerations::dsl::*;
+    use self::schema::offers::dsl::*;
+
+    let connection = &mut establish_connection();
+    let new_order = NewOrder {
+        signature: payload.signature,
+        create_by: payload.create_by,
+    };
+    let order_result = diesel::insert_into(orders)
+        .values(&new_order)
+        .get_result::<Order>(connection)
+        .expect("Error saving new order");
+
+    let mut new_considerations = vec![];
+    for consideration in payload.considerations {
+        new_considerations.push(NewConsideration {
+            order_id: order_result.id,
+            recipient: consideration.recipient,
+            token_type: consideration.token_type,
+            token_address: consideration.token_address,
+            amount: consideration.amount,
+            end_amount: consideration.end_amount,
+            identifier: consideration.identifier,
+        });
+    }
+    let considerations_result = diesel::insert_into(considerations)
+        .values(&new_considerations)
+        .get_results::<Consideration>(connection)
+        .expect("Error saving new consideration");
+
+    let mut new_offers = vec![];
+    for offer in payload.offers {
+        new_offers.push(NewOffer {
+            order_id: order_result.id,
+            token_type: offer.token_type,
+            token_address: offer.token_address,
+            amount: offer.amount,
+            end_amount: offer.end_amount,
+            identifier: offer.identifier,
+        });
+    }
+    let offers_result = diesel::insert_into(offers)
+        .values(&new_offers)
+        .get_results::<Offer>(connection)
+        .expect("Error saving new offer");
+
+    let result = FullOrder {
+        id: order_result.id,
+        signature: order_result.signature,
+        create_by: order_result.create_by,
+        considerations: considerations_result,
+        offers: offers_result,
+    };
+
+    (StatusCode::OK, Json(result))
+}
+
 #[derive(Deserialize)]
 struct GetOrder {
     address: String,

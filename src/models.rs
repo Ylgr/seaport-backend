@@ -75,3 +75,22 @@ pub struct NewOffer {
     pub end_amount: Option<String>,
     pub identifier: Option<String>,
 }
+
+// new full order, it is one order with many considerations and offers
+#[derive(Deserialize)]
+pub struct NewFullOrder {
+    pub signature: String,
+    pub create_by: String,
+    pub considerations: Vec<NewConsideration>,
+    pub offers: Vec<NewOffer>,
+}
+
+// full order, it is one order with many considerations and offers
+#[derive(Serialize)]
+pub struct FullOrder {
+    pub id: Uuid,
+    pub signature: String,
+    pub create_by: String,
+    pub considerations: Vec<Consideration>,
+    pub offers: Vec<Offer>,
+}
