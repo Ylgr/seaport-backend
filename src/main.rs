@@ -1,11 +1,9 @@
 use axum::{response::Html, routing::{get, post}, Router, Json, http::StatusCode, response::IntoResponse};
 use std::net::SocketAddr;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use self::models::*;
 use diesel::prelude::*;
 use seaport_server::*;
-use std::borrow::Borrow;
-use std::collections::HashMap;
 
 #[tokio::main]
 async fn main() {
@@ -34,7 +32,6 @@ async fn get_orders(
     use self::schema::orders::dsl::*;
     use self::schema::considerations::dsl::*;
     use self::schema::offers::dsl::*;
-    use std::collections::HashMap;
 
     let connection = &mut establish_connection();
     let results = match payload.address {

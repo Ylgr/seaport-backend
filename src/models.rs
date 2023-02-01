@@ -2,7 +2,6 @@ use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use crate::schema::*;
 use uuid::Uuid;
-use diesel_derive_enum::DbEnum;
 
 #[derive(Debug, Serialize, Deserialize, diesel_derive_enum::DbEnum, Clone)]
 #[DieselTypePath = "crate::schema::sql_types::TokenType"]
