@@ -5,6 +5,7 @@ use self::models::*;
 use diesel::prelude::*;
 use seaport_server::*;
 use std::borrow::Borrow;
+use std::collections::HashMap;
 
 #[tokio::main]
 async fn main() {
@@ -12,9 +13,7 @@ async fn main() {
     let app = Router::new()
         .route("/", get(root))
         .route("/orders", get(get_orders))
-        .route("/order", post(create_order))
-        .route("/consideration", post(create_consideration));
-
+        .route("/order", post(create_full_order));
     // run it
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("listening on {}", addr);
@@ -51,57 +50,27 @@ async fn get_orders(
     Json(payload): Json<GetOrder>,
 ) -> impl IntoResponse {
     use self::schema::orders::dsl::*;
-
-    let connection = &mut establish_connection();
-    let results = orders
-        .filter(create_by.eq(payload.address))
-        .load::<Order>(connection)
-        .expect("Error loading order");
-    // let results = orders
-    //     .load::<Order>(connection)
-    //     .expect("Error loading orders");
-    (StatusCode::OK, Json(results))
-}
-
-// api create order
-async fn create_order(
-    Json(payload): Json<NewOrder>,
-) -> impl IntoResponse {
-    use self::schema::orders::dsl::*;
-
-    let connection = &mut establish_connection();
-    let new_order = NewOrder {
-        signature: payload.signature,
-        create_by: payload.create_by,
-    };
-    let result = diesel::insert_into(orders)
-        .values(&new_order)
-        .get_result::<Order>(connection)
-        .expect("Error saving new order");
-    (StatusCode::OK, Json(result))
-}
-
-// api create consideration
-async fn create_consideration(
-    Json(payload): Json<NewConsideration>,
-) -> impl IntoResponse {
     use self::schema::considerations::dsl::*;
+    use self::schema::offers::dsl::*;
+    use std::collections::HashMap;
 
     let connection = &mut establish_connection();
-    let new_consideration = NewConsideration {
-        order_id: payload.order_id,
-        recipient: payload.recipient,
-        token_type: payload.token_type,
-        token_address: payload.token_address,
-        amount: payload.amount,
-        end_amount: payload.end_amount,
-        identifier: payload.identifier,
+    let results = match payload.address {
+        Some(address) => orders
+            .inner_join(considerations)
+            .inner_join(offers)
+            .filter(create_by.eq(address))
+            .load::<(Order, Consideration, Offer)>(connection)
+            .expect("Error loading orders"),
+        None => orders
+            .inner_join(considerations)
+            .inner_join(offers)
+            .load::<(Order, Consideration, Offer)>(connection)
+            .expect("Error loading orders"),
     };
-    let result = diesel::insert_into(considerations)
-        .values(&new_consideration)
-        .get_result::<Consideration>(connection)
-        .expect("Error saving new consideration");
-    (StatusCode::OK, Json(result))
+    (StatusCode::OK, Json(
+        FullOrder::from_joined_tables(results)
+    ))
 }
 
 // apt create full order return a full order include its considerations and offers
@@ -168,5 +137,5 @@ async fn create_full_order(
 
 #[derive(Deserialize)]
 struct GetOrder {
-    address: String,
+    address: Option<String>,
 }
