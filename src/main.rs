@@ -23,24 +23,6 @@ async fn main() {
         .unwrap();
 }
 
-// fn main() {
-//     use self::schema::orders::dsl::*;
-//
-//     let connection = &mut establish_connection();
-//     let results = orders
-//         // .filter(published.eq(true))
-//         // .limit(5)
-//         .load::<Order>(connection)
-//         .expect("Error loading posts");
-//
-//     println!("Displaying {} posts", results.len());
-//     for order in results {
-//         println!("{}", order.create_by);
-//         println!("-----------\n");
-//         println!("{}", order.signature);
-//     }
-// }
-
 async fn root() -> Html<&'static str> {
     Html("<h1>Hello, World!</h1>")
 }
